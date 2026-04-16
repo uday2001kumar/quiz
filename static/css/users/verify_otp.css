@@ -1,0 +1,105 @@
+/* RESET */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* BODY */
+body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #eef2f7, #dbe6f6);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 15px;
+}
+
+/* CONTAINER */
+.container {
+    width: 100%;
+    max-width: 420px;
+}
+
+/* CARD */
+.card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    text-align: center;
+}
+
+/* HEADER */
+.header h2 {
+    font-size: 22px;
+    color: #222;
+}
+
+.header p {
+    font-size: 14px;
+    color: #777;
+    margin-top: 5px;
+    margin-bottom: 20px;
+}
+
+/* OTP BOX */
+.otp-box input {
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    font-size: 18px;
+    text-align: center;
+    letter-spacing: 4px;
+}
+
+/* BUTTON */
+.btn {
+    width: 100%;
+    margin-top: 15px;
+    padding: 13px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, #4a90e2, #357abd);
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn:hover {
+    background: linear-gradient(135deg, #357abd, #2c5fa3);
+}
+
+/* MESSAGE */
+#message {
+    margin-top: 12px;
+    font-size: 14px;
+}
+
+/* RESEND */
+.resend {
+    margin-top: 15px;
+    font-size: 13px;
+}
+
+.resend a {
+    color: #4a90e2;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+/* MOBILE */
+@media (max-width: 480px) {
+    .card {
+        padding: 20px;
+    }
+
+    .header h2 {
+        font-size: 20px;
+    }
+}
