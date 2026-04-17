@@ -57,7 +57,6 @@
 <script>
 const BASE_URL = "{{ BASE_API_URL }}";
 
-// get csrf token from cookie
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== "") {
@@ -84,28 +83,34 @@ document.getElementById("signupForm").addEventListener("submit", async function(
         dob: document.getElementById("dob").value
     };
 
-    localStorage.setItem("email", data.email);
+    console.log("📤 Sending Data:", data);
 
     try {
-        const response = await fetch(`${BASE_URL}/users/signup/`, {
+        const response = await fetch(`${BASE_URL}/users/user-profile/`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "X-CSRFToken": csrftoken   // ✅ important
+                "X-CSRFToken": csrftoken
             },
             body: JSON.stringify(data)
         });
 
+        console.log("📡 Response Status:", response.status);
+
         const result = await response.json();
 
+        console.log("📥 Response Data:", result);
+
         if (response.ok) {
-            document.getElementById("message").innerHTML = "✅ Signup successful!";
-            window.location.href = "/verify-otp/";
+            console.log("✅ Signup Success");
+            window.location.href = "/users/verify_otp/";
         } else {
+            console.error("❌ API Error:", result);
             document.getElementById("message").innerHTML = "❌ " + (result.message || "Error");
         }
 
     } catch (error) {
+        console.error("🚨 Fetch Error:", error);
         document.getElementById("message").innerHTML = "⚠️ Server error!";
     }
 });

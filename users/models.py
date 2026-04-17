@@ -55,3 +55,6 @@ class UserProfile(BaseModel):
     class Meta:
         db_table = "user_profiles"
         ordering = ["-score"]
+
+
+

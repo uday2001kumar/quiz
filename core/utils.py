@@ -1,4 +1,5 @@
 from rest_framework.response import Response
+from authentication.models import CustomUser
 import random 
 from rest_framework.views import exception_handler
 
@@ -88,3 +89,60 @@ def custom_exception_handler(exc, context):
         response.status_code = 400
 
     return response
+
+
+from rest_framework_simplejwt.tokens import RefreshToken
+
+def get_tokens_for_user(CustomUser: CustomUser):
+    """
+    Generate JWT refresh and access tokens for a given user.
+
+    Adds custom claims (full_name, email, mobile) into the token.
+
+    Args:
+        user (User): The user instance for whom to generate tokens.
+
+    Returns:
+        dict: A dictionary containing:
+            - refresh (str): Refresh token as a string.
+            - access (str): Access token as a string.
+            - expiry_time (int): Token expiry timestamp in milliseconds.
+    """
+    token = RefreshToken.for_user(CustomUser)
+    token["full_name"] = CustomUser.full_name
+    token["email"] = CustomUser.email
+    token["mobile"] = CustomUser.mobile
+    return {
+        'refresh': str(token),
+        'access': str(token.access_token),
+        'expiry_time': (token.access_token['exp'] * 1000)
+    }
+
+
+from django.core.mail import send_mail
+from django.conf import settings
+
+
+def send_otp_email(email, otp):
+    subject = "Your OTP Verification Code"
+    
+    message = f"""
+Hello,
+
+Your OTP for login is: {otp}
+
+This OTP is valid for 5 minutes.
+
+Do not share this OTP with anyone.
+
+Thanks,
+Your Team
+"""
+
+    send_mail(
+        subject=subject,
+        message=message,
+        from_email=settings.EMAIL_HOST_USER,
+        recipient_list=[email],
+        fail_silently=False,
+    )

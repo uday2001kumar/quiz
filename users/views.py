@@ -53,6 +53,15 @@ class UserRegister(APIView):
                             errors="Email already exists",
                             status_code=status.HTTP_400_BAD_REQUEST
                         )
+                    
+                    if CustomUser.objects.filter(mobile=mobile).exists():
+                        # Force rollback
+                        transaction.set_rollback(True)
+                        return error_response(
+                            message="Mobile already exists",
+                            errors="Mobile already exists",
+                            status_code=status.HTTP_400_BAD_REQUEST
+                        )
 
                     #  Create user
                     user = CustomUser.objects.create(
