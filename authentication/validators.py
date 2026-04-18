@@ -58,4 +58,10 @@ class VerifyOTPValidator(serializers.Serializer):
         }
     )
 
+
+    def validate_otp(self, value):
+        if not value.isdigit():
+            raise serializers.ValidationError("OTP must contain only numbers")
+        return value
+
     

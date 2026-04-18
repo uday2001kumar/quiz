@@ -1,0 +1,178 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}Subscriptions{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin/subscription.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="topbar">
+    <h3>Subscription Plans</h3>
+    <button class="add-btn" onclick="openModal()">+ Add Plan</button>
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <h3 id="modalTitle">Add Plan</h3>
+
+        <input id="name" placeholder="Plan Name">
+        <input id="price" placeholder="Price">
+        <input id="days" placeholder="Duration Days">
+
+        <div class="modal-actions">
+            <button onclick="savePlan()">Save</button>
+            <button class="cancel" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- LIST -->
+<div id="plansList" class="plans-container"></div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+
+const token = localStorage.getItem("access");
+let editId = null;
+
+if (!token) {
+    window.location.href = "/auth/admin-login/";
+}
+
+/* LOAD PLANS */
+function loadPlans() {
+    fetch("/adminapp/plans/", {
+        headers: { "Authorization": "Bearer " + token }
+    })
+    .then(res => res.json())
+    .then(response => {
+
+        const container = document.getElementById("plansList");
+        container.innerHTML = "";
+
+        const plans = response.data || response;
+
+        if (!plans || plans.length === 0) {
+            container.innerHTML = "<p>No plans available</p>";
+            return;
+        }
+
+        plans.forEach(function(plan) {
+
+            let card = '<div class="plan">';
+            card += '<h4>' + plan.name + '</h4>';
+            card += '<p>₹' + plan.price + ' / ' + plan.duration_days + ' days</p>';
+
+            card += '<div class="actions">';
+            card += '<button class="edit" onclick="editPlan(' + plan.id + ')">Edit</button>';
+            card += '<button class="delete" onclick="deletePlan(' + plan.id + ')">Delete</button>';
+            card += '</div>';
+
+            card += '</div>';
+
+            container.innerHTML += card;
+        });
+
+    })
+    .catch(err => console.error("LOAD ERROR:", err));
+}
+
+/* OPEN MODAL */
+function openModal() {
+    document.getElementById("modal").classList.add("show");
+    document.getElementById("modalTitle").innerText = "Add Plan";
+}
+
+/* CLOSE MODAL */
+function closeModal() {
+    document.getElementById("modal").classList.remove("show");
+
+    document.getElementById("name").value = "";
+    document.getElementById("price").value = "";
+    document.getElementById("days").value = "";
+
+    editId = null;
+}
+
+/* SAVE */
+function savePlan() {
+    const name = document.getElementById("name").value;
+    const price = document.getElementById("price").value;
+    const days = document.getElementById("days").value;
+
+    if (!name || !price || !days) {
+        alert("All fields are required");
+        return;
+    }
+
+    const payload = {
+        name: name,
+        price: price,
+        duration_days: days
+    };
+
+    const url = editId ? "/adminapp/plans/" + editId + "/" : "/adminapp/plans/";
+    const method = editId ? "PUT" : "POST";
+
+    fetch(url, {
+        method: method,
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(() => {
+        closeModal();
+        loadPlans();
+    })
+    .catch(err => console.error("SAVE ERROR:", err));
+}
+
+/* EDIT */
+function editPlan(id) {
+    fetch("/adminapp/plans/" + id + "/", {
+        headers: { "Authorization": "Bearer " + token }
+    })
+    .then(res => res.json())
+    .then(response => {
+
+        const plan = response.data || response;
+
+        document.getElementById("name").value = plan.name;
+        document.getElementById("price").value = plan.price;
+        document.getElementById("days").value = plan.duration_days;
+
+        editId = id;
+        document.getElementById("modalTitle").innerText = "Edit Plan";
+
+        openModal();
+    })
+    .catch(err => console.error("EDIT ERROR:", err));
+}
+
+/* DELETE */
+function deletePlan(id) {
+    if (!confirm("Delete this plan?")) return;
+
+    fetch("/adminapp/plans/" + id + "/", {
+        method: "DELETE",
+        headers: { "Authorization": "Bearer " + token }
+    })
+    .then(() => loadPlans())
+    .catch(err => console.error("DELETE ERROR:", err));
+}
+
+/* INIT */
+loadPlans();
+
+</script>
+{% endblock %}

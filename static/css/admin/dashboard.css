@@ -1,0 +1,150 @@
+/* RESET */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f4f6f9;
+}
+
+/* LAYOUT */
+.dashboard {
+    display: flex;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 220px;
+    background: #111827;
+    color: white;
+    height: 100vh;
+    padding: 20px;
+}
+
+.sidebar h2 {
+    margin-bottom: 30px;
+}
+
+.sidebar ul {
+    list-style: none;
+}
+
+.sidebar ul li {
+    padding: 12px;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.sidebar ul li:hover,
+.sidebar .active {
+    background: #1f2937;
+}
+
+/* MAIN */
+.main {
+    flex: 1;
+    padding: 20px;
+}
+
+/* TOPBAR */
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+/* CARDS */
+.cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.card {
+    padding: 20px;
+    border-radius: 10px;
+    color: white;
+}
+
+.card h4 {
+    margin-bottom: 10px;
+}
+
+.card p {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.blue { background: #3b82f6; }
+.green { background: #16a34a; }
+.orange { background: #f59e0b; }
+.red { background: #ef4444; }
+
+/* SUBSCRIPTION */
+.subscription h3 {
+    margin-bottom: 15px;
+}
+
+.plans {
+    display: flex;
+    gap: 15px;
+}
+
+.plan {
+    flex: 1;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.plan h4 {
+    margin-bottom: 10px;
+}
+
+.plan p {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.plan ul {
+    list-style: none;
+    margin-bottom: 15px;
+}
+
+.plan ul li {
+    margin: 5px 0;
+}
+
+.plan button {
+    padding: 10px 15px;
+    border: none;
+    background: #3b82f6;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.popular {
+    border: 2px solid #16a34a;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+
+    .sidebar {
+        display: none;
+    }
+
+    .cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .plans {
+        flex-direction: column;
+    }
+}
