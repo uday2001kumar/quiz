@@ -146,3 +146,18 @@ Your Team
         recipient_list=[email],
         fail_silently=False,
     )
+
+
+class SerializerErrorHandler:
+    def __init__(self, errors):
+        if isinstance(errors, dict):
+            for field_errors in errors.values():
+                if isinstance(field_errors, list):
+                    self.error = field_errors[0]
+                    break
+                self.error = str(field_errors)
+                break
+        elif isinstance(errors, list):
+            self.error = errors[0]
+        else:
+            self.error = str(errors)

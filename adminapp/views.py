@@ -5,6 +5,7 @@ from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework import status
 
 # models
 from .models import SubscriptionPlan
@@ -13,7 +14,7 @@ from .models import SubscriptionPlan
 from .serializers import SubscriptionPlanSerializer
  
 # local
-from core.utils import success_response,error_response
+from core.utils import success_response,error_response,SerializerErrorHandler
 
 class SubscriptionPlanViewSet(ModelViewSet):
     authentication_classes = [JWTAuthentication]
@@ -27,14 +28,14 @@ class SubscriptionPlanViewSet(ModelViewSet):
             return error_response(
                 message="Authentication failed",
                 errors="User not logged in",
-                status_code=401
+                status_code=status.HTTP_401_UNAUTHORIZED
             )
-
+        print("User",request.user)
         if not request.user.is_staff:
             return error_response(
                 message="Permission denied",
                 errors="Only admin can access this API",
-                status_code=403
+                status_code=status.HTTP_403_FORBIDDEN
             )
 
         return None  # means allowed
@@ -56,13 +57,36 @@ class SubscriptionPlanViewSet(ModelViewSet):
         if check:
             return check
 
+        name = request.data.get("name")
+
+        #  Duplicate check
+        if SubscriptionPlan.objects.filter(name__iexact=name).exists():
+            return error_response(
+                message="Plan already exists",
+                errors=f"A plan with name '{name}' already exists",
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        #  Correct serializer usage
         serializer = self.get_serializer(data=request.data)
+        print("Serializer:",serializer)
+        #  Validation
+        if not serializer.is_valid():
+            error = SerializerErrorHandler(serializer.errors)
+            return error_response(
+                message=error.error,
+                errors="Validation failed",
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
 
-        if serializer.is_valid():
-            serializer.save()
-            return success_response("Plan created", serializer.data, 201)
+        #  Save
+        serializer.save()
 
-        return error_response("Validation failed", serializer.errors)
+        return success_response(
+            message="Plan created",
+            data=serializer.data,
+            status_code=status.HTTP_201_CREATED
+        )
 
     # RETRIEVE
     def retrieve(self, request, *args, **kwargs):
@@ -82,13 +106,21 @@ class SubscriptionPlanViewSet(ModelViewSet):
             return check
 
         plan = self.get_object()
-        serializer = self.get_serializer(plan, data=request.data)
+        serializer = self.get_serializer(plan, data=request.data,partial=True)
 
+        if not serializer.is_valid():
+            error = SerializerErrorHandler(serializer.errors)
+            return error_response(
+                message=error.error,
+                errors="Validation failed",
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+        
         if serializer.is_valid():
             serializer.save()
-            return success_response("Updated successfully", serializer.data)
+            return success_response(message="Updated successfully", data=serializer.data)
 
-        return error_response("Validation failed", serializer.errors)
+        return error_response(message="Validation failed", errors=serializer.errors)
 
     # DELETE
     def destroy(self, request, *args, **kwargs):
@@ -96,7 +128,19 @@ class SubscriptionPlanViewSet(ModelViewSet):
         if check:
             return check
 
-        plan = self.get_object()
-        plan.delete()
+        try:
+            plan = self.get_object()  # raises 404 if not found
 
-        return success_response("Deleted successfully")
+            plan.delete()
+
+            return success_response(
+                message="Deleted successfully",
+                data={}
+            )
+
+        except Exception as e:
+            return error_response(
+                message="Something went wrong!",
+                errors=str(e),
+                status_code=status.HTTP_404_NOT_FOUND
+            )

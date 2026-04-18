@@ -1,0 +1,234 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login</title>
+
+<link rel="stylesheet" href="{% static 'css/auth/adminlogin.css' %}">
+</head>
+
+<body>
+
+<!-- 🔔 TOP MESSAGE -->
+<div id="topMessage" class="top-msg"></div>
+
+<div class="overlay"></div>
+
+<div class="container">
+    <div class="card">
+
+        <h2>Admin Login</h2>
+
+        <input type="email" id="email" placeholder="Enter Email">
+
+        <button class="btn send-btn" id="sendBtn" onclick="sendOTP()">Send OTP</button>
+
+        <div class="otp-section" id="otpSection">
+            <input type="text" id="otp" maxlength="6" placeholder="Enter OTP">
+
+            <button class="btn verify-btn" id="verifyBtn" onclick="verifyOTP()">Verify OTP</button>
+
+            <button class="resend-btn" id="resendBtn" onclick="resendOTP()" disabled>
+                Resend OTP (30s)
+            </button>
+        </div>
+
+    </div>
+</div>
+
+
+
+<script>
+const baseURL = "";
+let timer = 30;
+let interval;
+let isSending = false;
+let isVerifying = false;
+
+/* 🔔 MESSAGE FUNCTION */
+function showMessage(msg, type="success") {
+    const el = document.getElementById("topMessage");
+    el.innerText = msg;
+    el.className = `top-msg show ${type}`;
+
+    setTimeout(() => {
+        el.classList.remove("show");
+    }, 3000);
+}
+
+/* SEND OTP */
+function sendOTP() {
+    if (isSending) return;
+
+    const email = document.getElementById("email").value;
+    const btn = document.getElementById("sendBtn");
+
+    if (!email) {
+        showMessage("Please enter your email", "error");
+        return;
+    }
+
+    isSending = true;
+    btn.innerHTML = '<div class="loader"></div>';
+
+    fetch(`${baseURL}/auth/send-email-otp/`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ email, role: "admin" })
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log("📩 SEND OTP RESPONSE:", data);
+
+        if (data.status === true || data.message.includes("OTP")) {
+            showMessage("OTP sent successfully", "success");
+
+            document.getElementById("otpSection").style.display = "block";
+            btn.style.display = "none";
+
+            startTimer();
+        } else {
+            showMessage(data.message, "error");
+            resetSendBtn();
+        }
+    })
+    .catch(err => {
+        console.error("❌ SEND OTP ERROR:", err);
+        showMessage("Error sending OTP", "error");
+        resetSendBtn();
+    });
+}
+
+function resetSendBtn() {
+    const btn = document.getElementById("sendBtn");
+    btn.innerHTML = "Send OTP";
+    isSending = false;
+}
+
+/* VERIFY OTP */
+function verifyOTP() {
+    if (isVerifying) return;
+
+    const email = document.getElementById("email").value;
+    const otp = document.getElementById("otp").value;
+    const btn = document.getElementById("verifyBtn");
+
+    if (!otp || otp.length !== 6) {
+        showMessage("Please enter a 6-digit OTP", "error");
+        return;
+    }
+
+    isVerifying = true;
+    btn.innerHTML = '<div class="loader"></div>';
+
+    fetch(`${baseURL}/auth/verify-email-otp/`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ email, otp, role: "admin" })
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log("✅ VERIFY OTP RESPONSE:", data);
+
+        if (data.status === true || data.message.includes("verified")) {
+
+            showMessage("Login Successful ✅", "success");
+
+            const access = data?.data?.token?.access;
+            const refresh = data?.data?.token?.refresh;
+
+            console.log("💾 ACCESS:", access);
+            console.log("💾 REFRESH:", refresh);
+
+            // 🔥 Save tokens
+            localStorage.setItem("access", access);
+            localStorage.setItem("refresh", refresh);
+
+            // 🔥 Pass token via URL (important)
+            const redirectURL = `/adminapp/dashboard/?token=${access}`;
+
+            console.log("🚀 Redirecting to:", redirectURL);
+
+            setTimeout(() => {
+                window.location.href = redirectURL;
+            }, 1000);
+
+        } else {
+            console.log("❌ VERIFY FAILED:", data);
+            showMessage(data.message, "error");
+            resetVerifyBtn();
+        }
+    })
+    .catch(err => {
+        console.error("❌ VERIFY ERROR:", err);
+        showMessage("Verification failed", "error");
+        resetVerifyBtn();
+    });
+}
+
+function resetVerifyBtn() {
+    const btn = document.getElementById("verifyBtn");
+    btn.innerHTML = "Verify OTP";
+    isVerifying = false;
+}
+
+/* RESEND OTP */
+function resendOTP() {
+    const email = document.getElementById("email").value;
+    const resendBtn = document.getElementById("resendBtn");
+
+    resendBtn.disabled = true;
+    resendBtn.innerText = "Sending...";
+
+    fetch(`${baseURL}/auth/send-email-otp/`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ email, role: "admin" })
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log("🔁 RESEND OTP RESPONSE:", data);
+
+        if (data.status === true || data.message.includes("OTP")) {
+            showMessage("OTP resent successfully", "success");
+
+            timer = 30;
+            startTimer();
+        } else {
+            showMessage(data.message, "error");
+            resendBtn.disabled = false;
+            resendBtn.innerText = "Resend OTP";
+        }
+    })
+    .catch(err => {
+        console.error("❌ RESEND ERROR:", err);
+        showMessage("Error resending OTP", "error");
+        resendBtn.disabled = false;
+        resendBtn.innerText = "Resend OTP";
+    });
+}
+
+/* TIMER */
+function startTimer() {
+    const btn = document.getElementById("resendBtn");
+
+    clearInterval(interval);
+    btn.disabled = true;
+
+    interval = setInterval(() => {
+        timer--;
+        btn.innerText = `Resend OTP (${timer}s)`;
+
+        if (timer <= 0) {
+            clearInterval(interval);
+            btn.disabled = false;
+            btn.innerText = "Resend OTP";
+        }
+    }, 1000);
+}
+</script>
+
+</body>
+</html>

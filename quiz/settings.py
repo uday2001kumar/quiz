@@ -64,7 +64,7 @@ import os
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR,"users/templates")],
+        'DIRS': [os.path.join(BASE_DIR,"users/templates","authentication/temlates","adminapp/templates")],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -157,7 +157,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),      # access token expiry
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=120),      # access token expiry
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),         # refresh token expiry
 
     'AUTH_HEADER_TYPES': ('Bearer',),                    # Authorization: Bearer <token>
